@@ -165,6 +165,74 @@ depends on. The arcs/edges are not stored separately, but expressed through the
 `ancestors`-fields.
 
 
+#### Vertices
+
+Vertices play the crucial and central role in the graphical model. Each vertex represents either the sampling from
+a distribution, or the observation of such a sampled value.
+
+You can get the entire graphical model by taking the set of vertices and their `ancestors`-fields, containing all
+vertices, upon which this vertex depends. However, there is a plethora of additional fields, providing information
+about the node and its relationship and status.
+
+**`name`**  
+  The generated name of the vertex. See also: `original_name`.
+  
+**`original_name`**  
+  In contrast to the `name`-field, this field either contains the name attributed to this value in the original
+  code, or `None`.
+  
+**`ancestors`**  
+  The set of all parent vertices. This contains only the ancestors, which are in direct line, and not the parents
+  of parents. Use the `get_all_ancestors()`-method to retrieve a full list of all ancestors (including parents of
+  parents of parents of ...).
+  
+**`dist_ancestors`**  
+  The set of ancestors used for the distribution/sampling, without those used inside the conditions.
+  
+**`cond_ancestors`**  
+  The set of ancestors, which are linked through conditionals.
+  
+**`distribution_name`**  
+  The name of the distribution, such as `Normal` or `Gamma`.
+  
+**`distribution_type`**  
+  Either `"continuous"` or `"discrete"`. You will usually query this field using one of the properties
+  `is_continuous` or `is_discrete`.
+  
+**`observation`**  
+  The observation as a string containing Python-code.
+  
+**`conditions`**  
+  The set of all conditions under which this vertex is evaluated. Each item in the set is actually a tuple of
+  a `ConditionNode` and a boolean value, to which the condition should evaluate. Note that the conditions are
+  not owned by a vertex, but might be shared across several vertices.
+  
+**`dependent_conditions`**  
+  The set of all conditions that depend on this vertex. In other words, all conditions which contain this
+  vertex in their `get_all_ancestors`-set.
+  
+**`sample_size`**  
+  The dimension of the samples drawn from this distribution.
+
+
+## Basic Structure of the Compiler
+
+The compiler comprises three major parts:
+
+- A **Frontend** (i.e. [Python](pyppl/fe_python) or [Clojure](pyppl/fe_clojure)) is
+  responsible for taking a source program (as a string) and to generate an
+  [_Abstract Syntax Tree_ (AST)](pyppl/ppl_ast.py).
+- Several [**Transformations**](pyppl/transforms) use techniques such as inlining,
+  loop unrolling, and variable renaming to simplify the input program. The objective
+  of these transformations is to simplify the program so as to extract the graphical
+  model, not to optimise the code computationally.
+- The [**Backend**](pyppl/backend) takes the simplified AST, and generates the code
+  for the `Model`-class. This code is assembled to a module, so that various imports
+  can be added, and compiled by Python (using the builtin `compile`-function). The
+  last step includes creating a new instance of this `Model`-class and adding some
+  additional information about the graph to this instance.
+
+
 ## License
 
 This project is released under the _GNU GPL 3_-license. 
