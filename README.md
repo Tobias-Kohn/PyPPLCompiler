@@ -1,6 +1,7 @@
 # PyPPLCompiler
-_A simple compiler to create graphical models out of a subset of Python code._ This
-compiler is part of the [Pyfo](https://github.com/bradleygramhansen/pyfo)-project.
+_A simple compiler to create graphical models out of a subset of Python code._ 
+
+This compiler is part of the [Pyfo](https://github.com/bradleygramhansen/pyfo)-project.
 As the compiler here provides only the frontend to compile a probabilistic program 
 to a graphical model, you might want to use it together a backend to do the actual 
 inference.
@@ -15,7 +16,7 @@ some parts to be still missing, especially in corner cases.
 
 ## Basic Usage
 
-The projects requires at least Python 3.4, and has been tested mostly under 
+The project requires at least Python 3.4, and has been tested mostly under 
 Python 3.6.
 
 In order to compile a model from a program (either Python- or Clojure-based), import
@@ -245,6 +246,115 @@ The compiler comprises three major parts:
   can be added, and compiled by Python (using the builtin `compile`-function). The
   last step includes creating a new instance of this `Model`-class and adding some
   additional information about the graph to this instance.
+
+
+#### Objective
+
+As input, we have a probabilistic program as a description of the model. In order to
+perform further analysis as well as inference, this probabilistic program needs to be
+transformed into a graph, where each node/vertex represents either a `sample`- or
+an `observe`-statement.
+
+Hence, the objective of the compiler is to rewrite the given probabilistic program so 
+that is basically just a linear set of assignments of random variables, i. e.:
+```python
+x1 = sample(...)
+x2 = sample(...)
+x3 = sample(...)
+observe(..., ...)
+```
+Each of these `sample`- or `observe`-statements could, of course, depend on any
+previously sampled value, leading to the graphical structure of dependencies. But
+once we have obtained this simplified form, it is rather easy to extract all vertices
+from, and transform the given program into the graphical model.
+
+In addition to these statements, the compiler also supports conditionals, so that
+an `observe`-statement, for instance, might actually have a guard:
+```python
+cond3 = x1 > 0
+observe(..., ...) if cond3 else None
+observe(..., ...) if not cond3 else None
+```
+
+
+#### Method
+
+To reliably extract the vertices and edges of the graphical model from the
+probabilistic model, the compiler needs to make sure of two things. First, it must
+make sure that each `sample`- or `observe`-statement is called exactly once (i.e.,
+a given statement is not called repeatedly inside a loop, say), so that the correct
+number of vertices is extracted from the program. Second, it must make sure the
+dependencies between the vertices is expressed correctly.
+
+When an interpreter executes a program, it actually executes one line after another,
+possibly jumping forth and back, and thereby executing some lines several times. Our
+compiler tries to mimic this behaviour, and records each line as it is executed - 
+where a line in the code might actually end up several times in the recording due 
+to loops, of course. The result is then a sequence of lines, where loops that repeat
+a piece of code, are replaced by the effective repetition of the code lines. Take,
+for instance, the following trivial example:
+```python
+a = 3
+for i in range(a):
+    y = i*i
+    print(y)
+```
+The interpreter will execute lines 3 and 4 a total of three times. Hence, our 
+compiler should transform this piece of code to:
+```python
+a = 3
+y = 0*0
+print(y)
+y = 1*1
+print(y)
+y = 2*2
+print(y)
+```
+In this simple case, it is easy to see that `i` takes on the values `0` to `2`. But
+what happens if we cannot easily deduce the exact values `i` takes on? Well, for 
+starters, we always need to know _the exact number of iterations_, otherwise there
+is nothing we can reliably do. But the values of `i` might come from some yet
+unknown list `b`. This is then expressed as:
+```python
+a = 3
+i = b[0]
+y = i*i
+print(y)
+i = b[1]
+y = i*i
+print(y)
+i = b[2]
+y = i*i
+print(y)
+```
+
+Loops are not the only case the compiler must take care of. A few examples of what
+the compiler must look out for...
+
+- `a = sample(normal(4, sample(uniform(1.0, 4.0))))` needs to be rewritten into two
+  separate `sample`-statements: `x1 = sample(uniform(1.0, 4.0))` and
+  `x2 = sample(normal(4, x1))` (note that the variable names inside the original
+  program have no influence on the naming of the vertices).
+
+- `for y in [2, 4, 3.5, 5]: observe(normal(4, 1), y)` needs to be unrolled, since
+  there are actually four separate `observe`-statements involved here, each of which
+  represents its own vertex or node in the graphical model.
+  
+  Note that this unrolling can only be done if at least the length of the list is
+  known to the compiler. Otherwise, the linearisation cannot be done properly. On
+  the other hand, we do not strictly need to unroll every loop - only those that 
+  have `sample`- or `observe`-statements inside the body.
+  
+- When a function contains a `sample`- or `observe`-statement, like, say, 
+  `def foo(a, b): return sample(normal(a+b, 1.0))`, we need to inline the function
+  each time it is called, since each call actually stands for a sampling, which is
+  expressed as a separate vertex/node in the graph.
+
+
+In order to keep the compiler's code manageable, the different transformations have
+been mostly split into various passes. Each transformation is thereby implemented
+using the [_visitor_-pattern](https://en.wikipedia.org/wiki/Visitor_pattern).
+
 
 
 ## License
