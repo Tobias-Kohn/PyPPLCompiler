@@ -1,10 +1,10 @@
 #
-# This file is part of PyFOPPL, an implementation of a First Order Probabilistic Programming Language in Python.
+# This file is part of PyPPLCompiler, a compiler for probabilistic programming to create graphical models.
 #
-# License: MIT (see LICENSE.txt)
+# License: GNU GPL 3 (see LICENSE.txt)
 #
 # 17. Jan 2018, Tobias Kohn
-# 28. Mar 2018, Tobias Kohn
+# 08. Jun 2018, Tobias Kohn
 #
 from enum import *
 
@@ -57,7 +57,7 @@ class Distribution(object):
 distributions = {
     Distribution('Bernoulli',   DistributionType.DISCRETE,   ['probs']),
     Distribution('Beta',        DistributionType.CONTINUOUS, ['alpha', 'beta']),
-    Distribution('Binomial',    DistributionType.DISCRETE, ['total_count', 'probs']),
+    Distribution('Binomial',    DistributionType.DISCRETE,   ['total_count', 'probs']),
     Distribution('Categorical', DistributionType.DISCRETE,   ['probs']),
     Distribution('Cauchy',      DistributionType.CONTINUOUS, ['mu', 'gamma']),
     Distribution('Dirichlet',   DistributionType.CONTINUOUS, ['alpha'], vector_sample=True),

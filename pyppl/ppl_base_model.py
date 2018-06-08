@@ -1,14 +1,12 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-'''
-Author: Bradley Gram-Hansen
-Time created:  18:51
-Date created:  19/03/2018
-
-License: MIT
-'''
-
-from abc import ABC, abstractmethod, ABCMeta
+#
+# This file is part of PyPPLCompiler, a compiler for probabilistic programming to create graphical models.
+#
+# License: GNU GPL 3 (see LICENSE.txt)
+#
+# 19. Mar 2018, Bradley Gram-Hansen
+# 19. Mar 2018, Bradley Gram-Hansen
+#
+from abc import ABC, abstractmethod
 
 
 class base_model(ABC):
@@ -58,11 +56,11 @@ class base_model(ABC):
         return NotImplementedError
 
     @abstractmethod
-    def gen_log_pdf(self):
+    def gen_log_pdf(self, state):
         return NotImplementedError
 
     @abstractmethod
-    def gen_log_pdf_transformed(self):
+    def gen_log_pdf_transformed(self, state):
         return NotImplementedError
 
     @abstractmethod

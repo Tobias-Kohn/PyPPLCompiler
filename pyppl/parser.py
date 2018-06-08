@@ -1,10 +1,10 @@
 #
-# This file is part of PyFOPPL, an implementation of a First Order Probabilistic Programming Language in Python.
+# This file is part of PyPPLCompiler, a compiler for probabilistic programming to create graphical models.
 #
-# License: MIT (see LICENSE.txt)
+# License: GNU GPL 3 (see LICENSE.txt)
 #
 # 22. Feb 2018, Tobias Kohn
-# 22. Mar 2018, Tobias Kohn
+# 08. Jun 2018, Tobias Kohn
 #
 from typing import Optional
 
@@ -14,6 +14,10 @@ from . import ppl_ast
 from .fe_clojure import ppl_foppl_parser
 from .fe_python import ppl_python_parser
 
+supported_languages = {
+    'Python': 'py',
+    'Clojure': 'clj',
+}
 
 def _detect_language(s:str):
     for char in s:

@@ -1,7 +1,7 @@
 #
-# This file is part of PyFOPPL, an implementation of a First Order Probabilistic Programming Language in Python.
+# This file is part of PyPPLCompiler, a compiler for probabilistic programming to create graphical models.
 #
-# License: MIT (see LICENSE.txt)
+# License: GNU GPL 3 (see LICENSE.txt)
 #
 # 20. Feb 2018, Tobias Kohn
 # 20. Mar 2018, Tobias Kohn
