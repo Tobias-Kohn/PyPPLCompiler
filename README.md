@@ -1,6 +1,9 @@
 # PyPPLCompiler
-A simple compiler to create graphical models out of a subset of Python code. This
+_A simple compiler to create graphical models out of a subset of Python code._ This
 compiler is part of the [Pyfo](https://github.com/bradleygramhansen/pyfo)-project.
+As the compiler here provides only the frontend to compile a probabilistic program 
+to a graphical model, you might want to use it together a backend to do the actual 
+inference.
 
 
 ## Warning
@@ -48,6 +51,7 @@ from pyppl import compile_model_from_file
 model = compile_model_from_file("examples/my_example.py")
 print(model)
 ```
+See [run_example.py](run_example.py).
 
 
 #### Function `compile_model(source, *, language, namespace)`
@@ -99,7 +103,7 @@ If a name should remain unaltered altogether, use `{'name': 'name'}`.
 ## The Model Class
 
 The model-class provides a set of methods, of which the most important ones are
-described here. More information can be found in the modules  
+described here. More information can be found in the modules
 [ppl_base_model.py](pyppl/ppl_base_model.py) and
 [ppl_graph_codegen.py](pyppl/backend/ppl_graph_codegen.py), respectively.
 
@@ -134,6 +138,32 @@ described here. More information can be found in the modules
     Returns a set of all conditions used in the graphical model, where each element
     is an instance of the `ConditionNode`-class (see [graphs.py](pyppl/graphs.py)).
     
+
+## The Graph
+
+The graphical model is represented by a graph comprising vertices (standing for
+sampled values and observations) and arcs (directed edges from one vertex to 
+another). The vertices are instances of class `Vertex` (to be found in 
+[graphs.py](pyppl/graphs.py)).
+
+The basic graphical model is adorned with additional auxiliary nodes that are not
+strictly part of the graphical model. On the one hand, there are `ConditionNode`s,
+representing conditions inside the probabilistic program. On the other hand, a
+`DataNode` might contain some static data in form of a list. The latter are simply
+an optimisation to avoid repetitively putting large lists/data-sets into the 
+generated code (consider, e. g., a large list `x` with accesses like `x[i]`,
+`x[j-1]` etc. sprinkled through the program. According to its inlining policy,
+the compiler would rewrite those accesses to something `[1, 2, 3][i]`, which does
+not make sense if the list is large).
+
+The conditions associated with a specific vertex can be accessed through its field
+`condition_nodes`, which is a set of all conditions directly used for this vertex.
+
+Each node (both vertices and conditions) have the fields `name: str` and
+`ancestors: Set[Node]`, the latter being the set of parents, this node directly
+depends on. The arcs/edges are not stored separately, but expressed through the
+`ancestors`-fields.
+
 
 ## License
 
