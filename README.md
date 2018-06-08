@@ -39,6 +39,11 @@ else:
 model = compile_model(my_program)
 print(model)
 ```
+If you have the packages `networkx`, `matplotlib`, and, ideally, `graphviz` 
+installed on your system, you can easily get a picture of the graph displayed:
+```python
+model.display_graph()
+```
 
 #### Examples
 
@@ -198,6 +203,15 @@ about the node and its relationship and status.
 **`distribution_type`**  
   Either `"continuous"` or `"discrete"`. You will usually query this field using one of the properties
   `is_continuous` or `is_discrete`.
+  
+**`distribution_arguments`**  
+  A dictionary that maps each of the parameters of the distribution used to a string
+  representing the Python code for its argument. For the _Normal_-distribution with
+  the parameters `loc` and `scale`, for instance, you might get something like:
+  `{'loc': "state['x1'] + 3", 'scale': '.mathsqrt(2)'}`.
+  
+  The individual arguments can also be accessed by position through the field
+  `distribution_args`, which is a list of strings.
   
 **`observation`**  
   The observation as a string containing Python-code.
