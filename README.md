@@ -208,7 +208,7 @@ about the node and its relationship and status.
   A dictionary that maps each of the parameters of the distribution used to a string
   representing the Python code for its argument. For the _Normal_-distribution with
   the parameters `loc` and `scale`, for instance, you might get something like:
-  `{'loc': "state['x1'] + 3", 'scale': '.mathsqrt(2)'}`.
+  `{'loc': "state['x1'] + 3", 'scale': 'math.sqrt(2)'}`.
   
   The individual arguments can also be accessed by position through the field
   `distribution_args`, which is a list of strings.
