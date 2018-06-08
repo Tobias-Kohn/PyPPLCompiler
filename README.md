@@ -6,7 +6,8 @@ compiler is part of the [Pyfo](https://github.com/bradleygramhansen/pyfo)-projec
 ## Warning
 
 The current project has been used in some limited research projects, but has not yet
-been extensively tested. It might not be ready for full production use.
+been extensively tested. It might not be ready for full production use, i.e. expect
+some parts to be still missing, especially in corner cases.
 
 
 ## Basic Usage
@@ -36,6 +37,19 @@ model = compile_model(my_program)
 print(model)
 ```
 
+#### Examples
+
+Further examples of input programs can be found in the 
+[`examples`](examples)-folder. You may want to use `compile_model_from_file()`
+to compile them directly to a model, i. e.:
+```python
+from pyppl import compile_model_from_file
+
+model = compile_model_from_file("examples/my_example.py")
+print(model)
+```
+
+
 #### Function `compile_model(source, *, language, namespace)`
 
 Takes a program as input, compiles the entire program, produces a Model-class and 
@@ -60,7 +74,7 @@ compute the log probability of a given 'state' (mapping of values for each verte
 respectively.
 
 
-### Languages
+#### Input Languages
 
 The system currently supports the following languages as input:
 - Python
@@ -79,9 +93,47 @@ provide a `namespace` argument to the compile-function like:
 ```
 compile_model(..., namespace = {'select': 'dist.categorical'})
 ```
-If a name should remain unaltered, use `{'name': 'name'}`.
+If a name should remain unaltered altogether, use `{'name': 'name'}`.
 
 
+## The Model Class
+
+The model-class provides a set of methods, of which the most important ones are
+described here. More information can be found in the modules  
+[ppl_base_model.py](pyppl/ppl_base_model.py) and
+[ppl_graph_codegen.py](pyppl/backend/ppl_graph_codegen.py), respectively.
+
+**`get_vertices() -> Set[Vertex]`**  
+    Returns a set of all the vertices/random variables in the model. The elements
+    of the set are instances of the `Vertex`-class 
+    (see [graphs.py](pyppl/graphs.py)).
+    
+**`get_vertices_names() -> List[str]`**  
+    Returns a list of the names of the vertices (cf. `get_vertices()`above).
+    
+**`get_arcs() -> Set[Tuple[Vertex, Vertex]]`**  
+    Returns a set of all arcs/edges between vertices in the model. Each arc is
+    given as a tuple leading from one vertex to another.
+    
+**`get_arcs_names() -> List[Tuple[str, str]]`**  
+    Return a list of the arcs/edges between vertices, where each arc is given as
+    a tuple of two names (cf. `get_vertices_names()` and `get_arcs()`).
+
+**`gen_prior_samples() -> Dict[str, Any]`**  
+    Samples from the graphical model and returns a dictionary that provides a
+    value for each vertex/random variable in the model. The returned dictionary
+    might contain additional values beside the random variables, and it can be 
+    used as input `state` in `gen_log_pdf()`.
+     
+**`gen_log_pdf(state: Dict[str, Any]) -> float`**  
+    The `state` argument must be a dictionary that provides values for each 
+    random variable in the graphical model (see `gen_prior_samples()`). The
+    function then computes the log probability of the given mapping of values.
+    
+**`get_conditions() -> Set[Condition]`**  
+    Returns a set of all conditions used in the graphical model, where each element
+    is an instance of the `ConditionNode`-class (see [graphs.py](pyppl/graphs.py)).
+    
 
 ## License
 
