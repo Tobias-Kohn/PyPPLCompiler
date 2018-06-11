@@ -4,7 +4,7 @@
 # License: GNU GPL 3 (see LICENSE.txt)
 #
 # 20. Feb 2018, Tobias Kohn
-# 20. Mar 2018, Tobias Kohn
+# 11. Jun 2018, Tobias Kohn
 #
 from ..fe_clojure import ppl_clojure_forms as clj
 from ..ppl_ast import *
@@ -173,6 +173,9 @@ class ClojureParser(clj.Visitor):
 
     def visit_fn(self, parameters, *body):
         params, vararg, body = self.parse_function(parameters, body)
+        #if isinstance(body, AstReturn):
+        #    return AstFunction(None, params, body.value, vararg=vararg)
+        #else:
         return AstFunction(None, params, body, vararg=vararg)
 
     def visit_for(self, bindings, *body):
@@ -401,7 +404,7 @@ class ClojureParser(clj.Visitor):
                 return AstSubscript(args[0], AstValue(n[1:]))
 
             elif n in self.__core_functions__:
-                return AstCall(AstSymbol('clojure.core.' + n), args)
+                return AstCall(AstSymbol('clojure.core.' + n, predef=True), args)
 
         return AstCall(function, args)
 

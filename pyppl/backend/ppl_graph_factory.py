@@ -4,7 +4,7 @@
 # License: GNU GPL 3 (see LICENSE.txt)
 #
 # 12. Mar 2018, Tobias Kohn
-# 11. May 2018, Tobias Kohn
+# 11. Jun 2018, Tobias Kohn
 #
 from ..ppl_ast import *
 from ..graphs import *
@@ -147,5 +147,10 @@ def _get_dist_name(dist: AstNode):
         if result.startswith('dist.'):
             result = result[5:]
         return result
-    else:
-        return None
+    elif isinstance(dist, AstSubscript):
+        if isinstance(dist.base, AstVector):
+            names = set([_get_dist_name(x) for x in dist.base.items])
+            if len(names) == 1:
+                return tuple(names)[0]
+
+    raise Exception("Not a valid distribution: '{}'".format(repr(dist)))
