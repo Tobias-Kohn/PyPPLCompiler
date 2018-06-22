@@ -4,7 +4,7 @@
 # License: GNU GPL 3 (see LICENSE.txt)
 #
 # 20. Feb 2018, Tobias Kohn
-# 11. Jun 2018, Tobias Kohn
+# 22. Jun 2018, Tobias Kohn
 #
 from ..fe_clojure import ppl_clojure_forms as clj
 from ..ppl_ast import *
@@ -27,6 +27,9 @@ class ClojureParser(clj.Visitor):
         'prepend',
         'reduce',
     }
+
+    def __init__(self):
+        self.value_bindings = {}
 
     def parse_alias(self, alias):
         if clj.is_quoted(alias):
@@ -137,6 +140,11 @@ class ClojureParser(clj.Visitor):
     def visit_def(self, target, source):
         target = self.parse_target(target)
         source = source.visit(self)
+        if type(target) is str:
+            if isinstance(source, AstValue) and not target in self.value_bindings:
+                self.value_bindings[target] = source.value
+            else:
+                self.value_bindings[target] = None
         return makeDef(target, source, True)
 
     def visit_defn(self, name, parameters, *body):
@@ -226,6 +234,9 @@ class ClojureParser(clj.Visitor):
 
     def visit_let(self, bindings, *body):
         targets, sources = self.parse_bindings(bindings)
+        for target in targets:
+            if type(target) is str:
+                self.value_bindings[target] = None
         return makeLet(targets, sources, self.parse_body(body))
 
     def visit_nth(self, sequence, index):

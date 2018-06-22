@@ -236,7 +236,9 @@ The compiler comprises three major parts:
 
 - A **Frontend** (i.e. [Python](pyppl/fe_python) or [Clojure](pyppl/fe_clojure)) is
   responsible for taking a source program (as a string) and to generate an
-  [_Abstract Syntax Tree_ (AST)](pyppl/ppl_ast.py).
+  [_Abstract Syntax Tree_ (AST)](pyppl/ppl_ast.py). Note that the AST was originally
+  designed for a Clojure-based system. This is still reflected in certain naming
+  choices. For instance, an _Assignment_ is represented by a _Def_-object.
 - Several [**Transformations**](pyppl/transforms) use techniques such as inlining,
   loop unrolling, and variable renaming to simplify the input program. The objective
   of these transformations is to simplify the program so as to extract the graphical
