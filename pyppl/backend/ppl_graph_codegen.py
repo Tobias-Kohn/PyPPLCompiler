@@ -4,7 +4,7 @@
 # License: GNU GPL 3 (see LICENSE.txt)
 #
 # 12. Mar 2018, Tobias Kohn
-# 07. May 2018, Tobias Kohn
+# 27. Jun 2018, Tobias Kohn
 #
 import datetime
 import importlib
@@ -89,7 +89,11 @@ class GraphCodeGenerator(object):
                 self.logpdf_suffix = ''
             if not has_dist:
                 if uses_torch:
-                    return 'import pyfo.distributions as dist\n'
+                    try:
+                        __import__("pyfo.distributions")
+                        return 'import pyfo.distributions as dist\n'
+                    except ModuleNotFoundError:
+                        return 'import torch.distributions as dist\n'
         return ''
 
 
@@ -212,9 +216,6 @@ class GraphCodeGenerator(object):
 
     def get_vars(self):
         return "return [v.name for v in self.vertices if v.is_sampled]"
-
-    def is_torch_imported(self):
-        return "import sys \nprint('torch' in sys.modules) \nprint(torch.__version__) \nprint(type(torch.tensor)) \nimport inspect \nprint(inspect.getfile(torch))"
 
     def _gen_code(self, buffer: list, code_for_vertex, *, want_data_node: bool=True, flags=None):
         distribution = None
