@@ -4,7 +4,7 @@
 # License: GNU GPL 3 (see LICENSE.txt)
 #
 # 07. Feb 2018, Tobias Kohn
-# 08. Jun 2018, Tobias Kohn
+# 27. Jun 2018, Tobias Kohn
 #
 from typing import Optional
 import enum
@@ -1503,7 +1503,7 @@ def makeFor(target, source, body):
         tmp = generate_temp_var()
         i = len(target)
         while i > 0:
-            i -= 0
+            i -= 1
             body = AstLet(target[i], makeSubscript(tmp, i), body)
         target = tmp
     return AstFor(target, source, body)

@@ -241,14 +241,34 @@ class Simplifier(TransformVisitor):
                 items.append(AstDef(node.target, item))
                 items.append(node.body)
             return self.visit(makeBody(items))
-        else:
-            src_type = self.get_type(source)
-            if isinstance(src_type, ppl_types.SequenceType) and src_type.size is not None:
+
+        if is_call(source, "zip"):
+            print("ARGS", source.args)
+            print(node)
+            lengths = []
+            for arg in source.args:
+                arg_type = self.get_type(arg)
+                if isinstance(arg_type, ppl_types.SequenceType) and arg_type.size is not None:
+                    lengths.append(arg_type.size)
+
+            if len(lengths) > 0:
                 items = []
-                for i in range(src_type.size):
-                    items.append(AstDef(node.target, makeSubscript(source, i)))
+                src_name = generate_temp_var()
+                items.append(AstDef(src_name, source))
+                for i in range(min(lengths)):
+                    items.append(AstDef(node.target, makeSubscript(src_name, i)))
                     items.append(node.body)
-                return self.visit(makeBody(items))
+                x = makeBody(items)
+                print(x)  ### DEBUGGING!!!
+                return self.visit(x)
+
+        src_type = self.get_type(source)
+        if isinstance(src_type, ppl_types.SequenceType) and src_type.size is not None:
+            items = []
+            for i in range(src_type.size):
+                items.append(AstDef(node.target, makeSubscript(source, i)))
+                items.append(node.body)
+            return self.visit(makeBody(items))
 
         raise RuntimeError("cannot unroll the for-loop [line {}]".format(getattr(node, 'lineno', '?')))
 
