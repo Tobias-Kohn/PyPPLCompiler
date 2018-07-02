@@ -4,7 +4,7 @@
 # License: GNU GPL 3 (see LICENSE.txt)
 #
 # 07. Feb 2018, Tobias Kohn
-# 16. Mar 2018, Tobias Kohn
+# 02. Jul 2018, Tobias Kohn
 #
 from typing import Optional
 
@@ -239,6 +239,9 @@ class SequenceType(Type):
 
         else:
             return None
+
+    def resize(self, new_size: int):
+        return SequenceType(name=self.name, base=self.base, item_type=self.item_type, size=new_size)
 
 
 #######################################################################################################################

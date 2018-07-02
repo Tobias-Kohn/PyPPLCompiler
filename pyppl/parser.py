@@ -4,7 +4,7 @@
 # License: GNU GPL 3 (see LICENSE.txt)
 #
 # 22. Feb 2018, Tobias Kohn
-# 08. Jun 2018, Tobias Kohn
+# 02. Jul 2018, Tobias Kohn
 #
 from typing import Optional
 
@@ -13,11 +13,19 @@ from .transforms import (ppl_new_simplifier, ppl_raw_simplifier, ppl_functions_i
 from . import ppl_ast
 from .fe_clojure import ppl_foppl_parser
 from .fe_python import ppl_python_parser
+from .backend.ppl_code_generator import generate_code as _gen_code
 
-supported_languages = {
-    'Python': 'py',
-    'Clojure': 'clj',
-}
+
+##### Used for debugging: #####
+
+_print_debug_steps = False
+
+def _print_debug(letter, code):
+    if _print_debug_steps:
+        print("=" * 30, letter, "=" * 30)
+        print(_gen_code(code), flush=True)
+        print("-" * 63, flush=True)
+
 
 def _detect_language(s:str):
     for char in s:
@@ -34,6 +42,14 @@ def _detect_language(s:str):
             return 'py'
 
     return None
+
+##############################
+
+
+supported_languages = {
+    'Python': 'py',
+    'Clojure': 'clj',
+}
 
 
 def parse(source:str, *, simplify:bool=True, language:Optional[str]=None, namespace:Optional[dict]=None):
@@ -57,15 +73,20 @@ def parse(source:str, *, simplify:bool=True, language:Optional[str]=None, namesp
             namespace = {}
         raw_sim = ppl_raw_simplifier.RawSimplifier(namespace)
         result = raw_sim.visit(result)
+        _print_debug("A", result)
         if simplify:
             result = ppl_functions_inliner.FunctionInliner().visit(result)
             result = raw_sim.visit(result)
+            _print_debug("B", result)
 
     if simplify and result is not None:
         result = ppl_static_assignments.StaticAssignments().visit(result)
+        _print_debug("C", result)
         result = ppl_new_simplifier.Simplifier().visit(result)
+        _print_debug("D", result)
 
     result = ppl_symbol_simplifier.SymbolSimplifier().visit(result)
+    _print_debug("E", result)
     return result
 
 

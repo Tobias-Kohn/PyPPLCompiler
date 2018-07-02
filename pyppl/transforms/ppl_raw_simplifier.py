@@ -4,7 +4,7 @@
 # License: GNU GPL 3 (see LICENSE.txt)
 #
 # 09. Mar 2018, Tobias Kohn
-# 23. Mar 2018, Tobias Kohn
+# 02. Jul 2018, Tobias Kohn
 #
 from ast import copy_location as _cl
 from ..ppl_ast import *
@@ -56,6 +56,10 @@ class RawSimplifier(ScopedVisitor):
         l_prefix, left = self._visit_expr(node.left)
         r_prefix, right = self._visit_expr(node.right)
         prefix = l_prefix + r_prefix
+
+        # Special case: make a long vector `[1, 2] * 3`
+        if len(prefix) == 0 and isinstance(left, AstValueVector) and is_integer(right):
+            return _cl(makeVector(left.items * right.value), node)
 
         if left is node.left and right is node.right:
             return node
@@ -117,6 +121,8 @@ class RawSimplifier(ScopedVisitor):
         if getattr(node.value, 'original_name', None) is None:
             node.value.original_name = node.name
         value = self.visit(node.value)
+        if isinstance(value, (AstValue, AstValueVector)):
+            self.define(node.name, value)
         if value is node.value:
             return node
         else:
@@ -138,6 +144,10 @@ class RawSimplifier(ScopedVisitor):
         prefix, source = self._visit_expr(node.source)
         body = self.visit(node.body)
         target = node.target if node.target in get_info(body).free_vars else '_'
+        if isinstance(source, AstCall):
+            src_var = generate_temp_var()
+            prefix.append(makeDef(src_var, source))
+            source = AstSymbol(src_var)
         if target is node.target and source is node.source and body is node.body:
             return node
         else:

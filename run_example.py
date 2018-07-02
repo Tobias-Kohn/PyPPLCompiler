@@ -1,6 +1,6 @@
 from pyppl import compile_model_from_file
 
-model = compile_model_from_file("examples/if_model_1.py")
+model = compile_model_from_file("examples/gmm_model.py")
 print(model)
 
 print("=" * 30)

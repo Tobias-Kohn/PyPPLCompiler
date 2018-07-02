@@ -4,7 +4,7 @@
 # License: GNU GPL 3 (see LICENSE.txt)
 #
 # 19. Feb 2018, Tobias Kohn
-# 22. Mar 2018, Tobias Kohn
+# 02. Jul 2018, Tobias Kohn
 #
 from ..ppl_ast import *
 from .ppl_types import *
@@ -47,6 +47,10 @@ class TypeInferencer(Visitor):
     def visit_binary(self, node: AstBinary):
         left = self.visit(node.left)
         right = self.visit(node.right)
+
+        if isinstance(left, SequenceType) and right in Integer:
+            return left.resize(left.size * node.right.value)
+
         return node.op_function(left, right)
 
     def visit_body(self, node:AstBody):

@@ -4,7 +4,7 @@
 # License: GNU GPL 3 (see LICENSE.txt)
 #
 # 22. Feb 2018, Tobias Kohn
-# 23. Mar 2018, Tobias Kohn
+# 02. Jul 2018, Tobias Kohn
 #
 from ast import copy_location as _cl
 from ..ppl_ast_annotators import *
@@ -177,6 +177,9 @@ class Simplifier(TransformVisitor):
                     return AstValue(arg_type.size)
         return self.visit_call(node)
 
+    #def visit_call_map(self, node: AstCall):
+    #    pass
+
     def visit_call_range(self, node:AstCall):
         args = [self.visit(arg) for arg in node.args]
         if 1 <= len(args) <= 2 and all([is_integer(arg) for arg in args]):
@@ -243,8 +246,6 @@ class Simplifier(TransformVisitor):
             return self.visit(makeBody(items))
 
         if is_call(source, "zip"):
-            print("ARGS", source.args)
-            print(node)
             lengths = []
             for arg in source.args:
                 arg_type = self.get_type(arg)
@@ -259,7 +260,6 @@ class Simplifier(TransformVisitor):
                     items.append(AstDef(node.target, makeSubscript(src_name, i)))
                     items.append(node.body)
                 x = makeBody(items)
-                print(x)  ### DEBUGGING!!!
                 return self.visit(x)
 
         src_type = self.get_type(source)

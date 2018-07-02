@@ -4,17 +4,23 @@
 # License: GNU GPL 3 (see LICENSE.txt)
 #
 # 20. Mar 2018, Tobias Kohn
-# 21. Mar 2018, Tobias Kohn
+# 02. Jul 2018, Tobias Kohn
 #
 from ..ppl_ast import *
 from ..aux.ppl_transform_visitor import TransformVisitor
+from ..types import ppl_types, ppl_type_inference
 
 
 class FunctionInliner(TransformVisitor):
 
     def __init__(self):
         super().__init__()
+        self.type_inferencer = ppl_type_inference.TypeInferencer(self)
         self._let_counter = 0
+
+    def get_type(self, node: AstNode):
+        result = self.type_inferencer.visit(node)
+        return result
 
     def visit_call(self, node: AstCall):
         if isinstance(node.function, AstSymbol):
@@ -63,6 +69,42 @@ class FunctionInliner(TransformVisitor):
 
         return super().visit_call(node)
 
+    def visit_call_map(self, node: AstCall):
+        if node.arg_count > 1:
+            seq_args = node.args[1:]
+            if all([is_vector(arg) for arg in seq_args]) and isinstance(node.args[0], AstSymbol):
+                lengths = min([len(arg) for arg in seq_args])
+                result = []
+                func = node.args[0]
+                for i in range(lengths):
+                    result.append(AstCall(func, [arg[i] for arg in seq_args]))
+                return self.visit(makeVector(result))
+            else:
+                return self.visit_call(node)
+        else:
+            return AstVector([])
+
+    def visit_call_zip(self, node: AstCall):
+        if node.arg_count > 1:
+            seq_args = node.args
+
+            if all([is_vector(arg) for arg in seq_args]):
+                lengths = min([len(arg) for arg in seq_args])
+                result = []
+                for i in range(lengths):
+                    result.append(makeVector([arg[i] for arg in seq_args]))
+                return self.visit(makeVector(result))
+            else:
+                arg_types = [self.get_type(arg) for arg in seq_args]
+                arg_sizes = [arg.size if isinstance(arg, ppl_types.SequenceType) else None for arg in arg_types]
+                if all(arg_sizes):
+                    result = []
+                    for i in range(min(arg_sizes)):
+                        result.append(makeVector([makeSubscript(arg, i) for arg in seq_args]))
+                    return self.visit(makeVector(result))
+
+        return self.visit_call(node)
+
     def visit_def(self, node: AstDef):
         if isinstance(node.value, AstFunction):
             self.define(node.name, node.value, globally=node.global_context)
@@ -75,6 +117,11 @@ class FunctionInliner(TransformVisitor):
                 name = node.name + tmp
                 self.define(node.name, AstSymbol(name))
                 return node.clone(name=name, value=value)
+
+        else:
+            value = self.visit(node.value)
+            if isinstance(value, (AstValue, AstValueVector, AstVector)):
+                self.define(node.name, value, globally=True)
 
         return super().visit_def(node)
 
