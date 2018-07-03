@@ -4,7 +4,7 @@
 # License: GNU GPL 3 (see LICENSE.txt)
 #
 # 20. Mar 2018, Tobias Kohn
-# 02. Jul 2018, Tobias Kohn
+# 03. Jul 2018, Tobias Kohn
 #
 from ..ppl_ast import *
 from ..aux.ppl_transform_visitor import TransformVisitor
@@ -93,7 +93,7 @@ class StaticAssignments(TransformVisitor):
         return scope.bindings
 
     def append_to_body(self, item: AstNode):
-        return self.symbol_scope.append(item)
+        return False # self.symbol_scope.append(item)
 
     def is_loop_scope(self):
         return self.symbol_scope.is_loop
@@ -305,7 +305,8 @@ class StaticAssignments(TransformVisitor):
             result = makeBody(node.source, node.body)
         else:
             result = makeBody(AstDef(node.target, node.source), node.body)
-        return self.visit(result)
+        result = self.visit(result)
+        return result
 
     def visit_list_for(self, node: AstListFor):
         prefix, source = self.visit_and_split(node.source)
