@@ -4,7 +4,7 @@
 # License: GNU GPL 3 (see LICENSE.txt)
 #
 # 20. Feb 2018, Tobias Kohn
-# 22. Jun 2018, Tobias Kohn
+# 25. Sep 2018, Tobias Kohn
 #
 from ..fe_clojure import ppl_clojure_forms as clj
 from ..ppl_ast import *
@@ -281,7 +281,7 @@ class ClojureParser(clj.Visitor):
             name, as_name = self.parse_alias(arg)
             if name is None:
                 raise SyntaxError("cannot import '{}'".format(arg))
-            result.append(AstImport(name, [], as_name))
+            result.append(AstImport(name, None, as_name))
 
         if len(result) == 1:
             return result[0]
@@ -433,6 +433,14 @@ class ClojureParser(clj.Visitor):
         return AstDict(items)
 
     def visit_symbol_form(self, node:clj.Symbol):
+        if '/' in node.name:
+            parts = node.name.split('/')
+            result = AstSymbol(parts[0])
+            del parts[0]
+            while len(parts) > 0:
+                result = AstAttribute(result, parts[0])
+                del parts[0]
+            return result
         return AstSymbol(node.name)
 
     def visit_value_form(self, node:clj.Value):
